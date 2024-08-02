@@ -1,19 +1,19 @@
 package com.example.atividade01dm.ui
 
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,118 +24,111 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavController
-import androidx.navigation.compose.rememberNavController
 import com.example.atividade01dm.R
-import com.example.atividade01dm.ui.viewmodel.AuthViewModel
+import com.example.atividade01dm.api.ApiState
+import com.example.atividade01dm.viewmodel.AuthViewModel
+import androidx.navigation.NavController
 
 @Composable
 fun LoginScreen(
     navController: NavController
 ) {
-    val viewModel = viewModel<AuthViewModel>()
-    var emailState by remember { mutableStateOf("") }
-    var senhaState by remember { mutableStateOf("") }
-    var errorMessageState by remember { mutableStateOf("") }
 
-    Surface(
-        modifier = Modifier,
+    val authViewModel = viewModel<AuthViewModel>()
+    val loginState by authViewModel.loginResponseBody
 
-        ) {
-        Column(
+    var usuario by remember { mutableStateOf("") }
+    var senha by remember { mutableStateOf("") }
+    var passwordVisibility by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .padding(24.dp)
+            .verticalScroll(rememberScrollState())
+            .fillMaxSize(),
+        verticalArrangement = Arrangement.spacedBy(10.dp, Alignment.CenterVertically),
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Image(
+            painter = painterResource(id = R.drawable.logo_lobo),
+            contentDescription = null,
             modifier = Modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp, Alignment.CenterVertically),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .padding(bottom = 24.dp)
+                .size(150.dp)
+        )
 
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.logo_lobo),
-                contentDescription = "Logo do ifro",
-                modifier = Modifier
-                    .size(300.dp)
-            )
-
-            if (!errorMessageState.isNullOrBlank()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .background(Color(250, 136, 127))
-                        .padding(16.dp),
-                    horizontalArrangement = Arrangement.Center
-                ) {
+        when(loginState) {
+            is ApiState.Created -> {}
+            is ApiState.Loading -> {}
+            is ApiState.Success -> {
+                navController.navigate("inicio")
+            }
+            is ApiState.Error -> {
+                loginState.message?.let { message ->
                     Text(
-                        text = errorMessageState,
-                        modifier = Modifier,
-                        color = Color.White,
-                        fontSize = 16.sp
+                        message,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(10.dp),
+                        style = TextStyle(
+                            fontWeight = FontWeight.Bold,
+                            color = Color.Red
+                        )
                     )
                 }
             }
+        }
 
-            OutlinedTextField(
-                value = emailState,
-                onValueChange = { emailState = it },
-                modifier = Modifier
-                    .fillMaxWidth(),
-                label = { Text(text = "E-mail") },
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Next,
-                    keyboardType = KeyboardType.Email
-                )
-            )
+        OutlinedTextField(
+            value = usuario,
+            onValueChange = { usuario = it },
+            label = { Text("Usuário") },
+            modifier = Modifier.fillMaxWidth(),
+        )
 
-            OutlinedTextField(
-                value = senhaState,
-                onValueChange = { senhaState = it },
-                modifier = Modifier
-                    .fillMaxWidth(),
-                label = { Text(text = "Senha") },
-                singleLine = true,
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    imeAction = ImeAction.Done,
-                    keyboardType = KeyboardType.Password
-                )
-            )
-
-            Button(
-                onClick = {
-                    viewModel.signIn(
-                        emailState,
-                        senhaState,
-                        onSuccess = {
-
-                        },
-                        onError = { message ->
-                            errorMessageState = message
-                        }
+        OutlinedTextField(
+            value = senha,
+            onValueChange = { senha = it },
+            label = { Text("Senha") },
+            visualTransformation = if (passwordVisibility) VisualTransformation.None else PasswordVisualTransformation(),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            modifier = Modifier.fillMaxWidth(),
+            trailingIcon = {
+                IconButton(onClick = {
+                    passwordVisibility = !passwordVisibility
+                }) {
+                    val id = if (passwordVisibility) R.drawable.ic_visibility_off else R.drawable.ic_visibility_on
+                    Icon(
+                        painter = painterResource(id = id),
+                        contentDescription = null
                     )
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(45.dp),
-            ) {
-                Text(text = "Entrar")
-            }
+                }
+            },
+        )
 
+        Button(
+            onClick = {
+                authViewModel.login(
+                    usuario,
+                    senha
+                )
+            },
+            modifier = Modifier
+                .padding(top = 24.dp)
+                .fillMaxWidth()
+        ) {
+            Text(
+                "Entrar",
+                modifier = Modifier
+                    .padding(10.dp)
+            )
         }
     }
 }
-
-@Composable
-@Preview
-fun LoginScreenPreview() {
-    LoginScreen(rememberNavController())
-}
-
