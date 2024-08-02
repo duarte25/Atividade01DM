@@ -40,7 +40,6 @@ import androidx.navigation.NavController
 fun LoginScreen(
     navController: NavController
 ) {
-
     val authViewModel = viewModel<AuthViewModel>()
     val loginState by authViewModel.loginResponseBody
 
@@ -68,7 +67,7 @@ fun LoginScreen(
             is ApiState.Created -> {}
             is ApiState.Loading -> {}
             is ApiState.Success -> {
-                navController.navigate("inicio")
+                navController.navigate("usuarios")
             }
             is ApiState.Error -> {
                 loginState.message?.let { message ->
@@ -130,5 +129,9 @@ fun LoginScreen(
                     .padding(10.dp)
             )
         }
+    }
+
+    if (loginState is ApiState.Loading) {
+        LoadScreen()
     }
 }

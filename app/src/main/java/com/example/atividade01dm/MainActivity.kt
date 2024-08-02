@@ -15,6 +15,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.atividade01dm.ui.InicioScreen
 import com.example.atividade01dm.ui.LoginScreen
+import com.example.atividade01dm.ui.UsuarioScreen
+import com.example.atividade01dm.ui.UsuariosScreen
 import com.example.atividade01dm.ui.theme.Atividade01DMTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -34,6 +36,12 @@ class MainActivity : ComponentActivity() {
                     }
                     composable("inicio") {
                         InicioScreen(navController = navController)
+                    }
+                    composable("usuarios") {
+                        UsuariosScreen(navController)
+                    }
+                    composable("usuario") {
+                        UsuarioScreen(navController)
                     }
                 }
 
